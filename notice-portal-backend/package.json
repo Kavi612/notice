@@ -1,0 +1,23 @@
+{
+  "name": "notice-portal-backend",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "sam build",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
+    "@types/node": "^20.17.50",
+    "esbuild": "^0.25.9",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1123.0",
+    "@aws-sdk/s3-request-presigner": "^3.1123.0",
+    "pptxgenjs": "^4.0.1"
+  },
+  "overrides": {
+    "image-size": "npm:image-size-next@2.1.1"
+  }
+}
