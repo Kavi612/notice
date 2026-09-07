@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 interface RoleOption {
   buttonClassName: string;
   cardClassName: string;
+  demoPassword: string;
+  demoUsername: string;
   description: string;
   featureClassName: string;
   features: readonly string[];
@@ -45,6 +47,8 @@ const roleOptions: readonly RoleOption[] = [
       "Manage notices and approvals",
       "Access reports and analytics",
     ],
+    demoPassword: "test1H@123",
+    demoUsername: "testhod1@gmail.com",
     icon: ShieldCheck,
     iconClassName: "bg-indigo-100 text-indigo-600",
     label: "HOD",
@@ -62,6 +66,8 @@ const roleOptions: readonly RoleOption[] = [
       "Schedule and manage timelines",
       "Track acknowledgements and responses",
     ],
+    demoPassword: "test1F@123",
+    demoUsername: "testfaculty1",
     icon: GraduationCap,
     iconClassName: "bg-blue-100 text-blue-600",
     label: "Faculty",
@@ -79,6 +85,8 @@ const roleOptions: readonly RoleOption[] = [
       "Acknowledge and respond",
       "Stay informed and never miss updates",
     ],
+    demoPassword: "test1S@123",
+    demoUsername: "teststudent1",
     icon: BookOpen,
     iconClassName: "bg-emerald-100 text-emerald-600",
     label: "Student",
@@ -233,6 +241,14 @@ export function Login() {
                         ))}
                       </ul>
                       <div className="mt-auto pt-5">
+                        <p className="mb-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2.5 py-2 text-[0.65rem] leading-4 text-slate-500">
+                          <span className="font-semibold text-slate-400">
+                            Demo
+                          </span>{" "}
+                          <span className="text-slate-600">
+                            {option.demoUsername} / {option.demoPassword}
+                          </span>
+                        </p>
                         <span
                           className={cn(
                             "flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white shadow-sm transition-all group-hover:shadow-md",

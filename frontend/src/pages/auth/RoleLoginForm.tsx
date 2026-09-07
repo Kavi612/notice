@@ -88,6 +88,23 @@ const roleDestinations: Record<UserRole, string> = {
   STUDENT: "/student",
 };
 
+const demoAccounts: Partial<
+  Record<UserRole, { identifier: string; password: string }>
+> = {
+  HOD: {
+    identifier: "testhod1@gmail.com",
+    password: "test1H@123",
+  },
+  FACULTY: {
+    identifier: "testfaculty1",
+    password: "test1F@123",
+  },
+  STUDENT: {
+    identifier: "teststudent1",
+    password: "test1S@123",
+  },
+};
+
 export function RoleLoginForm({
   identifierAutocomplete,
   identifierLabel,
@@ -106,6 +123,19 @@ export function RoleLoginForm({
   const navigate = useNavigate();
   const styles = roleStyles[role];
   const IdentifierIcon = identifierType === "email" ? Mail : IdCard;
+  const demoAccount = demoAccounts[role];
+
+  const fillDemoCredentials = () => {
+    if (!demoAccount) {
+      return;
+    }
+
+    setAuthError(null);
+    setFormState({
+      identifier: demoAccount.identifier,
+      password: demoAccount.password,
+    });
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -415,6 +445,38 @@ export function RoleLoginForm({
                   <ArrowRight aria-hidden="true" className="size-4" />
                 </Button>
               </form>
+
+              {demoAccount && (
+                <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      Demo login
+                    </p>
+                    <button
+                      className="text-[0.7rem] font-medium text-indigo-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      disabled={isSubmitting}
+                      onClick={fillDemoCredentials}
+                      type="button"
+                    >
+                      Fill credentials
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">
+                    <span className="block">
+                      <span className="text-slate-400">Username</span>{" "}
+                      <span className="font-medium text-slate-800">
+                        {demoAccount.identifier}
+                      </span>
+                    </span>
+                    <span className="block">
+                      <span className="text-slate-400">Password</span>{" "}
+                      <span className="font-medium text-slate-800">
+                        {demoAccount.password}
+                      </span>
+                    </span>
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
