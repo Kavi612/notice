@@ -24,6 +24,8 @@ const LOAD_ERROR = "Couldn't load this notice.";
 const SAVE_DRAFT_ERROR = "Couldn't save this draft, please try again.";
 const PUBLISH_ERROR = "Couldn't publish this notice, please try again.";
 const SCHEDULE_ERROR = "Couldn't schedule this notice, please try again.";
+const SCHEDULE_MISSING_ERROR =
+  "Pick a date and time before scheduling this notice.";
 const ARCHIVE_ERROR = "Couldn't archive this notice, please try again.";
 const UNARCHIVE_ERROR = "Couldn't unarchive this notice, please try again.";
 
