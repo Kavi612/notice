@@ -1,5 +1,59 @@
 [
   {
+    "id": "n_1795017602346",
+    "title": "A7: Confidential HOD Draft Notice",
+    "body": "Confidential agenda points only visible to author until published.",
+    "department": "Computer Science",
+    "author_id": "71b30daa-60f1-70a5-8e70-0cd99993ac9c",
+    "author_name": "TestHOD",
+    "author_role": "HOD",
+    "target_roles": [
+      "FACULTY"
+    ],
+    "status": "DRAFT",
+    "priority": "REGULAR",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T16:00:02.346Z",
+    "created_at": "2026-11-18T16:00:02.346Z",
+    "updated_at": "2026-11-18T16:00:02.346Z"
+  },
+  {
+    "id": "n_1795017602303",
+    "title": "A3: Faculty notice for Students",
+    "body": "Lab assignment submission deadline extended to Sunday midnight.",
+    "department": "Computer Science",
+    "author_id": "0123adda-2071-7036-99ea-96ea86448eda",
+    "author_name": "testfaculty1",
+    "author_role": "FACULTY",
+    "target_roles": [
+      "STUDENT"
+    ],
+    "status": "PUBLISHED",
+    "priority": "REGULAR",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T16:00:02.303Z",
+    "created_at": "2026-11-18T16:00:02.303Z",
+    "updated_at": "2026-11-18T16:00:02.303Z"
+  },
+  {
+    "id": "n_1795017602276",
+    "title": "A1: HOD notice for Faculty",
+    "body": "Department faculty meeting scheduled for Friday at 3 PM.",
+    "department": "Computer Science",
+    "author_id": "71b30daa-60f1-70a5-8e70-0cd99993ac9c",
+    "author_name": "TestHOD",
+    "author_role": "HOD",
+    "target_roles": [
+      "FACULTY"
+    ],
+    "status": "PUBLISHED",
+    "priority": "REGULAR",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T16:00:02.265Z",
+    "created_at": "2026-11-18T16:00:02.276Z",
+    "updated_at": "2026-11-18T16:00:02.276Z"
+  },
+  {
     "id": "n_1795016221080",
     "title": "Unit Test II Announcement - Distributed Systems (CS701)",
     "body": "The second internal unit test for CS701 Distributed Systems will be held next Tuesday during the 2nd period in Room 304. The syllabus covers Modules 3 and 4: Distributed Consensus (Paxos/Raft) and Cloud Storage Engines. Attendance is mandatory.\n\nContact: Faculty In-charge (faculty@college.edu / +91 9876543210)",

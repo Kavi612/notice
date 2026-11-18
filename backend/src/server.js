@@ -6,19 +6,22 @@ const noticeRoutes = require('./routes/noticeRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configure CORS for the Vite dev server origin
-const allowedOrigins = [
-    'http://localhost:5173',
-    process.env.CORS_ORIGIN,
-].filter(Boolean);
+// Configure CORS for the Vite dev server and deployed frontend origins
+const rawCorsOrigin = process.env.CORS_ORIGIN || '';
+const configuredOrigins = rawCorsOrigin
+    .split(',')
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0 && o !== '*');
+
+const allowedOrigins = Array.from(new Set(['http://localhost:5173', ...configuredOrigins]));
 
 app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (curl, mobile, server-to-server) or matching allowed origins
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        if (!origin || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        return callback(null, true);
+        return callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

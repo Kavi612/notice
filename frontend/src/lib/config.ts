@@ -3,6 +3,12 @@ export const AWS_API_ORIGIN =
 
 export const API_BASE_URL = import.meta.env.DEV ? "" : AWS_API_ORIGIN;
 
+export const EXPRESS_API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ?? ""
+)
+  .trim()
+  .replace(/\/+$/, "");
+
 export const COGNITO_REGION = "ap-south-1";
 
 export const COGNITO_USER_POOL_ID = "ap-south-1_a2KkiKxyL";

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/config";
+import { API_BASE_URL, EXPRESS_API_BASE_URL } from "@/lib/config";
 import type { Notice, NoticeCategory, NoticeStatus, NoticeTemplate } from "@/types";
 
 export const SESSION_EXPIRED_ERROR =
@@ -9,6 +9,25 @@ export class SessionExpiredError extends Error {
     super(SESSION_EXPIRED_ERROR);
     this.name = "SessionExpiredError";
   }
+}
+
+async function parseResponseOrThrow<T = any>(
+  response: Response,
+  requestUrl: string,
+  defaultErrorMessage = "Request failed",
+): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    throw new Error(
+      `The API at ${requestUrl} returned a web page instead of data. Check VITE_API_BASE_URL and that the backend is deployed.`,
+    );
+  }
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.message || data?.error || defaultErrorMessage);
+  }
+  return data as T;
 }
 
 export interface PublishedNoticeResponse {
@@ -465,7 +484,8 @@ export async function createDepartmentNotice(
   data: CreateDepartmentNoticeInput,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  const response = await fetch("/api/notices", {
+  const url = `${EXPRESS_API_BASE_URL}/api/notices`;
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -478,19 +498,19 @@ export async function createDepartmentNotice(
     throw new SessionExpiredError();
   }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to create notice.");
-  }
-
-  const payload = await response.json();
+  const payload = await parseResponseOrThrow<{ notice: import("@/types/notice").DepartmentNotice }>(
+    response,
+    url,
+    "Failed to create notice.",
+  );
   return payload.notice;
 }
 
 export async function listDepartmentNotices(
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice[]> {
-  const response = await fetch("/api/notices", {
+  const url = `${EXPRESS_API_BASE_URL}/api/notices`;
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -500,18 +520,19 @@ export async function listDepartmentNotices(
     throw new SessionExpiredError();
   }
 
-  if (!response.ok) {
-    throw new Error("Failed to load notices.");
-  }
-
-  const payload = await response.json();
+  const payload = await parseResponseOrThrow<{ notices: import("@/types/notice").DepartmentNotice[] }>(
+    response,
+    url,
+    "Failed to load notices.",
+  );
   return payload.notices || [];
 }
 
 export async function listPrincipalNotices(
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice[]> {
-  const response = await fetch("/api/notices?scope=my", {
+  const url = `${EXPRESS_API_BASE_URL}/api/notices?scope=my`;
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -521,11 +542,11 @@ export async function listPrincipalNotices(
     throw new SessionExpiredError();
   }
 
-  if (!response.ok) {
-    throw new Error("Failed to load notices.");
-  }
-
-  const payload = await response.json();
+  const payload = await parseResponseOrThrow<{ notices: import("@/types/notice").DepartmentNotice[] }>(
+    response,
+    url,
+    "Failed to load notices.",
+  );
   return payload.notices || [];
 }
 
@@ -539,7 +560,8 @@ export async function getDepartmentNoticeById(
   id: string,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  const response = await fetch(`/api/notices/${encodeURIComponent(id)}`, {
+  const url = `${EXPRESS_API_BASE_URL}/api/notices/${encodeURIComponent(id)}`;
+  const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -549,11 +571,11 @@ export async function getDepartmentNoticeById(
     throw new SessionExpiredError();
   }
 
-  if (!response.ok) {
-    throw new Error("Failed to load notice.");
-  }
-
-  const payload = await response.json();
+  const payload = await parseResponseOrThrow<{ notice: import("@/types/notice").DepartmentNotice }>(
+    response,
+    url,
+    "Failed to load notice.",
+  );
   return payload.notice;
 }
 
@@ -562,7 +584,8 @@ export async function updateDepartmentNotice(
   data: Partial<CreateDepartmentNoticeInput>,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  const response = await fetch(`/api/notices/${encodeURIComponent(id)}`, {
+  const url = `${EXPRESS_API_BASE_URL}/api/notices/${encodeURIComponent(id)}`;
+  const response = await fetch(url, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -575,12 +598,11 @@ export async function updateDepartmentNotice(
     throw new SessionExpiredError();
   }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to update notice.");
-  }
-
-  const payload = await response.json();
+  const payload = await parseResponseOrThrow<{ notice: import("@/types/notice").DepartmentNotice }>(
+    response,
+    url,
+    "Failed to update notice.",
+  );
   return payload.notice;
 }
 
@@ -614,7 +636,8 @@ export async function deleteDepartmentNotice(
   id: string,
   accessToken: string,
 ): Promise<void> {
-  const response = await fetch(`/api/notices/${encodeURIComponent(id)}`, {
+  const url = `${EXPRESS_API_BASE_URL}/api/notices/${encodeURIComponent(id)}`;
+  const response = await fetch(url, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -625,9 +648,6 @@ export async function deleteDepartmentNotice(
     throw new SessionExpiredError();
   }
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || "Failed to delete notice.");
-  }
+  await parseResponseOrThrow(response, url, "Failed to delete notice.");
 }
 
