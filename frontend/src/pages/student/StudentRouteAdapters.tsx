@@ -185,13 +185,15 @@ export function NoticeDetailsRoute() {
           : current,
       );
 
-      if (!userId) {
+      if (!userId || !accessToken) {
         return;
       }
 
-      void markNoticeAsRead(selectedNoticeId, userId).catch(() => undefined);
+      void markNoticeAsRead(selectedNoticeId, userId, accessToken).catch(
+        () => undefined,
+      );
     },
-    [userId],
+    [accessToken, userId],
   );
 
   return (

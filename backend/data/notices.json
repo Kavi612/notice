@@ -1,5 +1,115 @@
 [
   {
+    "id": "n_1795019580535",
+    "title": "T3 Principal Circular to HODs",
+    "body": "Annual academic curriculum review meeting schedule.",
+    "department": "Office of the Principal",
+    "author_id": "31839daa-90c1-7037-1059-a480fc5276e1",
+    "author_name": "College Principal",
+    "author_role": "PRINCIPAL",
+    "target_roles": [
+      "HOD"
+    ],
+    "status": "PUBLISHED",
+    "priority": "URGENT",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T16:33:00.535Z",
+    "created_at": "2026-11-18T16:33:00.536Z",
+    "updated_at": "2026-11-18T16:33:00.536Z"
+  },
+  {
+    "id": "n_1795019580522",
+    "title": "T2 HOD Department Draft",
+    "body": "Draft policy notes for departmental review.",
+    "department": "Computer Science",
+    "author_id": "71b30daa-60f1-70a5-8e70-0cd99993ac9c",
+    "author_name": "TestHOD",
+    "author_role": "HOD",
+    "target_roles": [
+      "FACULTY",
+      "STUDENT"
+    ],
+    "status": "DRAFT",
+    "priority": "REGULAR",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T16:33:00.522Z",
+    "created_at": "2026-11-18T16:33:00.522Z",
+    "updated_at": "2026-11-18T16:33:00.522Z"
+  },
+  {
+    "id": "n_1795019580477",
+    "title": "T1 Faculty Edited Draft",
+    "body": "Updated content for student announcement.",
+    "department": "Computer Science",
+    "author_id": "0123adda-2071-7036-99ea-96ea86448eda",
+    "author_name": "testfaculty1",
+    "author_role": "FACULTY",
+    "target_roles": [
+      "STUDENT"
+    ],
+    "status": "PUBLISHED",
+    "priority": "REGULAR",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T16:33:00.477Z",
+    "created_at": "2026-11-18T16:33:00.477Z",
+    "updated_at": "2026-11-18T16:33:00.509Z"
+  },
+  {
+    "id": "n_1795018239945",
+    "title": "Curriculum Review and Continuous Internal Assessment Meeting",
+    "body": "All department faculty members are requested to assemble in the Department Conference Room on Monday at 3:00 PM. Agenda items include CIA question bank moderation, outcome-based education attainment sheets, and research seminar planning.\n\nVenue: Kamarajar Auditorium, 2nd Floor\nDate: 2026-11-27\nTime: 03:03\nContact: Head of Department (hod.cse@college.edu / +91 9876543210)",
+    "department": "Computer Science and Engineering",
+    "author_id": "71b30daa-60f1-70a5-8e70-0cd99993ac9c",
+    "author_name": "testhod1@gmail.com",
+    "author_role": "HOD",
+    "target_roles": [
+      "FACULTY"
+    ],
+    "status": "PUBLISHED",
+    "priority": "REGULAR",
+    "category": "SEMINAR",
+    "notice_date": "2026-11-18T00:00:00.000Z",
+    "created_at": "2026-11-18T16:10:39.945Z",
+    "updated_at": "2026-11-18T16:10:39.945Z"
+  },
+  {
+    "id": "n_1795018185409",
+    "title": "Guidelines for Advanced Computing Laboratory Access & Equipment Usage",
+    "body": "Standard operating procedures for access to high-performance GPUs and servers in the Advanced Computing Laboratory are now updated. Faculty guides must approve batch access requests. Students are reminded that network monitoring and safety guidelines apply at all times.\n\nVenue: Executive Board Room, Main Block\nDate: 2026-11-21\nTime: 02:30\nContact: Head of Department (hod.cse@college.edu / +91 9876543210)",
+    "department": "Computer Science and Engineering",
+    "author_id": "71b30daa-60f1-70a5-8e70-0cd99993ac9c",
+    "author_name": "testhod1@gmail.com",
+    "author_role": "HOD",
+    "target_roles": [
+      "FACULTY",
+      "STUDENT"
+    ],
+    "status": "PUBLISHED",
+    "priority": "REGULAR",
+    "category": "GENERAL",
+    "notice_date": "2026-11-18T00:00:00.000Z",
+    "created_at": "2026-11-18T16:09:45.409Z",
+    "updated_at": "2026-11-18T16:09:45.409Z"
+  },
+  {
+    "id": "n_1795018127079",
+    "title": "Faculty Meeting on Internal Assessment Schedule",
+    "body": "All faculty members are requested to attend the meeting in the seminar hall at 2:30 PM on Monday. The internal assessment timetable will be finalised.\n\nVenue: Seminar Hall\nDate: 2026-11-26\nTime: 00:00\nContact: Office of the Principal (principal@college.edu / +91 9876543210)",
+    "department": "All Departments",
+    "author_id": "31839daa-90c1-7037-1059-a480fc5276e1",
+    "author_name": "testprincipal",
+    "author_role": "PRINCIPAL",
+    "target_roles": [
+      "FACULTY"
+    ],
+    "status": "PUBLISHED",
+    "priority": "REGULAR",
+    "category": "SEMINAR",
+    "notice_date": "2026-11-18T00:00:00.000Z",
+    "created_at": "2026-11-18T16:08:47.079Z",
+    "updated_at": "2026-11-18T16:08:57.955Z"
+  },
+  {
     "id": "n_1795017602346",
     "title": "A7: Confidential HOD Draft Notice",
     "body": "Confidential agenda points only visible to author until published.",

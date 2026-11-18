@@ -49,8 +49,14 @@ export function FacultyDashboardRoute() {
 
     void loadNotices();
 
+    const handleFocus = () => {
+      void loadNotices();
+    };
+
+    window.addEventListener("focus", handleFocus);
     return () => {
       isCancelled = true;
+      window.removeEventListener("focus", handleFocus);
     };
   }, [accessToken]);
 

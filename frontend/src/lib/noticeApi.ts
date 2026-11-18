@@ -1,4 +1,4 @@
-import { API_BASE_URL, EXPRESS_API_BASE_URL } from "@/lib/config";
+import { API_BASE_URL } from "@/lib/config";
 import type { Notice, NoticeCategory, NoticeStatus, NoticeTemplate } from "@/types";
 
 export const SESSION_EXPIRED_ERROR =
@@ -223,8 +223,16 @@ export function normalizeNotice(raw: unknown): Notice | null {
   };
 }
 
-export async function listNotices(): Promise<Notice[]> {
-  const response = await fetch(`${API_BASE_URL}/notices`);
+export async function listNotices(accessToken: string): Promise<Notice[]> {
+  const response = await fetch(`${API_BASE_URL}/notices`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
 
   if (!response.ok) {
     throw new Error("Couldn't load notices.");
@@ -236,10 +244,22 @@ export async function listNotices(): Promise<Notice[]> {
     .filter((notice): notice is Notice => notice !== null);
 }
 
-export async function getNoticeById(noticeId: string): Promise<Notice> {
+export async function getNoticeById(
+  noticeId: string,
+  accessToken: string,
+): Promise<Notice> {
   const response = await fetch(
     `${API_BASE_URL}/notices/${encodeURIComponent(noticeId)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
   );
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
 
   if (!response.ok) {
     throw new Error("Couldn't load this notice.");
@@ -448,6 +468,7 @@ export async function updateNoticePoster(
 export async function markNoticeAsRead(
   noticeId: string,
   userId: string,
+  accessToken: string,
 ): Promise<void> {
   const response = await fetch(
     `${API_BASE_URL}/notices/${encodeURIComponent(noticeId)}/read`,
@@ -455,6 +476,7 @@ export async function markNoticeAsRead(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         noticeId,
@@ -464,7 +486,11 @@ export async function markNoticeAsRead(
     },
   );
 
-    if (!response.ok && response.status !== 409) {
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok && response.status !== 409) {
     throw new Error("Couldn't mark this notice as read.");
   }
 }
@@ -484,7 +510,7 @@ export async function createDepartmentNotice(
   data: CreateDepartmentNoticeInput,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  const url = `${EXPRESS_API_BASE_URL}/api/notices`;
+  const url = `${API_BASE_URL}/notices`;
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -503,13 +529,13 @@ export async function createDepartmentNotice(
     url,
     "Failed to create notice.",
   );
-  return payload.notice;
+  return payload.notice || (payload as unknown as import("@/types/notice").DepartmentNotice);
 }
 
 export async function listDepartmentNotices(
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice[]> {
-  const url = `${EXPRESS_API_BASE_URL}/api/notices`;
+  const url = `${API_BASE_URL}/notices`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -531,7 +557,7 @@ export async function listDepartmentNotices(
 export async function listPrincipalNotices(
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice[]> {
-  const url = `${EXPRESS_API_BASE_URL}/api/notices?scope=my`;
+  const url = `${API_BASE_URL}/notices?scope=my`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -560,7 +586,7 @@ export async function getDepartmentNoticeById(
   id: string,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  const url = `${EXPRESS_API_BASE_URL}/api/notices/${encodeURIComponent(id)}`;
+  const url = `${API_BASE_URL}/notices/${encodeURIComponent(id)}`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -576,7 +602,7 @@ export async function getDepartmentNoticeById(
     url,
     "Failed to load notice.",
   );
-  return payload.notice;
+  return payload.notice || (payload as unknown as import("@/types/notice").DepartmentNotice);
 }
 
 export async function updateDepartmentNotice(
@@ -584,7 +610,7 @@ export async function updateDepartmentNotice(
   data: Partial<CreateDepartmentNoticeInput>,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  const url = `${EXPRESS_API_BASE_URL}/api/notices/${encodeURIComponent(id)}`;
+  const url = `${API_BASE_URL}/notices/${encodeURIComponent(id)}`;
   const response = await fetch(url, {
     method: "PUT",
     headers: {
@@ -603,7 +629,7 @@ export async function updateDepartmentNotice(
     url,
     "Failed to update notice.",
   );
-  return payload.notice;
+  return payload.notice || (payload as unknown as import("@/types/notice").DepartmentNotice);
 }
 
 export async function publishDepartmentNotice(
@@ -636,7 +662,7 @@ export async function deleteDepartmentNotice(
   id: string,
   accessToken: string,
 ): Promise<void> {
-  const url = `${EXPRESS_API_BASE_URL}/api/notices/${encodeURIComponent(id)}`;
+  const url = `${API_BASE_URL}/notices/${encodeURIComponent(id)}`;
   const response = await fetch(url, {
     method: "DELETE",
     headers: {

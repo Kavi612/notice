@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Notice Portal AWS Serverless Backend (SAM + HTTP API Gateway + DynamoDB)
+
+Globals:
+  Function:
+    Timeout: 15
+    MemorySize: 256
+    Runtime: nodejs20.x
+    Environment:
+      Variables:
+        TABLE_NAME: Notices
+        USERS_TABLE: Users
+        COGNITO_USER_POOL_ID: ap-south-1_a2KkiKxyL
+        COGNITO_CLIENT_ID: vg03lfv1edc7gq2s9ncjhrn9j
+
+Resources:
+  NoticePortalHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+      Auth:
+        Authorizers:
+          CognitoJwtAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: "https://cognito-idp.ap-south-1.amazonaws.com/ap-south-1_a2KkiKxyL"
+              audience:
+                - "vg03lfv1edc7gq2s9ncjhrn9j"
+
+  CreateNoticeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/createNotice.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Notices
+      Events:
+        CreateNotice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NoticePortalHttpApi
+            Path: /notices
+            Method: post
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  ListNoticesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/listNotices.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Notices
+      Events:
+        ListNotices:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NoticePortalHttpApi
+            Path: /notices
+            Method: get
+            Auth:
+              Authorizer: NONE
+
+  GetNoticeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/getNotice.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Notices
+      Events:
+        GetNotice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NoticePortalHttpApi
+            Path: /notices/{id}
+            Method: get
+            Auth:
+              Authorizer: NONE
+
+  UpdateNoticeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/updateNotice.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Notices
+      Events:
+        UpdateNotice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NoticePortalHttpApi
+            Path: /notices/{id}
+            Method: put
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+  DeleteNoticeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handlers/deleteNotice.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: Notices
+      Events:
+        DeleteNotice:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref NoticePortalHttpApi
+            Path: /notices/{id}
+            Method: delete
+            Auth:
+              Authorizer: CognitoJwtAuthorizer
+
+Outputs:
+  HttpApiUrl:
+    Description: HTTP API Gateway endpoint URL
+    Value: !Sub "https://${NoticePortalHttpApi}.execute-api.${AWS::Region}.amazonaws.com"

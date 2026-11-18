@@ -103,7 +103,10 @@ export function FacultyDashboard({
           <p className="mt-3 text-xs text-slate-500">Notices created by you</p>
         </Link>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft">
+        <Link
+          className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-soft transition-all hover:border-indigo-200 hover:shadow-md"
+          to="/faculty/notices?status=DRAFT"
+        >
           <div className="flex items-center gap-3">
             <span className="flex size-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
               <FilePenLine className="size-5" />
@@ -118,7 +121,7 @@ export function FacultyDashboard({
             </div>
           </div>
           <p className="mt-3 text-xs text-slate-500">Unpublished authored drafts</p>
-        </div>
+        </Link>
       </section>
 
       {/* Received and Sent Sections Grid */}
@@ -186,12 +189,20 @@ export function FacultyDashboard({
                 Sent Notices (Authored)
               </h2>
             </div>
-            <Link
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
-              to="/faculty/create-notice"
-            >
-              + Create New
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                to="/faculty/notices"
+              >
+                View All ({sentNotices.length})
+              </Link>
+              <Link
+                className="text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                to="/faculty/create-notice"
+              >
+                + Create New
+              </Link>
+            </div>
           </div>
 
           {isLoading ? (
