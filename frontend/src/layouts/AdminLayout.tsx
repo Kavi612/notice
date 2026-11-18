@@ -4,6 +4,7 @@ import {
   Bell,
   CalendarDays,
   ChevronDown,
+  Inbox,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -24,6 +25,7 @@ export function AdminLayout() {
     : "/hod";
   const adminNavigation = [
     { icon: LayoutDashboard, label: "Dashboard", path: workspaceBase },
+    { icon: Inbox, label: "Inbox", path: `${workspaceBase}/inbox` },
     { icon: Plus, label: "Create Notice", path: `${workspaceBase}/create-notice` },
     { icon: Users, label: "Users", path: `${workspaceBase}/users` },
     { icon: Bell, label: "Notices", path: `${workspaceBase}/notices` },

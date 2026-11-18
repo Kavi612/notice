@@ -2,6 +2,14 @@ import { createContext, useContext } from "react";
 
 import type { UserRole } from "@/types";
 
+export const APP_ROLES = [
+  "PRINCIPAL",
+  "HOD",
+  "ADMIN",
+  "FACULTY",
+  "STUDENT",
+] as const;
+
 export interface AuthUser {
   sub: string;
   username: string;

@@ -206,7 +206,6 @@ export function StudentDashboard({
                           </p>
                         </div>
                         <p className="mt-1 text-xs text-slate-400">
-                          {notice.authorName} ·{" "}
                           <time dateTime={displayDate}>
                             {formatRelativeDate(displayDate, currentTime)}
                           </time>

@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import {
+  APP_ROLES,
   AuthContext,
   type AuthContextValue,
   type AuthUser,
@@ -13,11 +14,11 @@ import {
 import { decodeIdToken, login as authenticate } from "@/lib/authService";
 import type { UserRole } from "@/types";
 
-const APP_ROLES = ["HOD", "ADMIN", "FACULTY", "STUDENT"] as const;
 const AUTH_STORAGE_KEY = "notice-portal-auth";
 
 interface StoredAuth {
   accessToken: string;
+  idToken?: string;
   currentUser: AuthUser;
 }
 
@@ -46,6 +47,7 @@ function readStoredAuth(): StoredAuth | null {
 
     return {
       accessToken: parsed.accessToken,
+      idToken: typeof parsed.idToken === "string" ? parsed.idToken : undefined,
       currentUser: user,
     };
   } catch {
@@ -63,9 +65,23 @@ function writeStoredAuth(auth: StoredAuth | null) {
 }
 
 function resolveRoleFromGroups(groups: string[]): AuthUser["role"] {
-  return (
-    APP_ROLES.find((role) => groups.includes(role)) ?? null
-  );
+  // Matching exact priority order from backend/src/middleware/auth.js
+  if (groups.includes("PRINCIPAL")) {
+    return "PRINCIPAL";
+  }
+  if (groups.includes("ADMIN")) {
+    return "ADMIN";
+  }
+  if (groups.includes("HOD")) {
+    return "HOD";
+  }
+  if (groups.includes("FACULTY")) {
+    return "FACULTY";
+  }
+  if (groups.includes("STUDENT")) {
+    return "STUDENT";
+  }
+  return APP_ROLES.find((role) => groups.includes(role)) ?? null;
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -91,6 +107,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setCurrentUser(user);
       writeStoredAuth({
         accessToken: tokens.accessToken,
+        idToken: tokens.idToken,
         currentUser: user,
       });
 

@@ -4,6 +4,7 @@ import {
   BookOpen,
   CalendarDays,
   ChevronDown,
+  Inbox,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const studentNavigation = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/student" },
+  { icon: Inbox, label: "Inbox", path: "/student/inbox" },
   { icon: Bell, label: "All Notices", path: "/student/notices" },
 ] as const;
 

@@ -1,4 +1,4 @@
-export type UserRole = "HOD" | "ADMIN" | "FACULTY" | "STUDENT";
+export type UserRole = "PRINCIPAL" | "HOD" | "ADMIN" | "FACULTY" | "STUDENT";
 
 export type NoticeCategory =
   | "EXAMINATION"

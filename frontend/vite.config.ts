@@ -12,6 +12,7 @@ const apiProxy = {
   "/documents": { changeOrigin: true, target: AWS_API_ORIGIN },
   "/health": { changeOrigin: true, target: AWS_API_ORIGIN },
   "/notices": { changeOrigin: true, target: AWS_API_ORIGIN },
+  "/api": { changeOrigin: true, target: "http://localhost:5000" },
 } as const;
 
 export default defineConfig({

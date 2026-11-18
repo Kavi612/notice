@@ -37,6 +37,25 @@ interface RoleOption {
 const roleOptions: readonly RoleOption[] = [
   {
     buttonClassName:
+      "bg-linear-to-r from-violet-600 to-indigo-600 group-hover:from-violet-700 group-hover:to-indigo-700",
+    cardClassName: "border-t-violet-500",
+    description:
+      "Oversee institution-wide activities and broadcast official executive notices.",
+    featureClassName: "bg-violet-50 text-violet-600",
+    features: [
+      "Publish official executive notices",
+      "Target HODs, faculty, or students",
+      "Generate verified downloadable notices",
+    ],
+    demoPassword: "test1P@123",
+    demoUsername: "testprincipal",
+    icon: Landmark,
+    iconClassName: "bg-violet-100 text-violet-600",
+    label: "Principal",
+    path: "/login/principal",
+  },
+  {
+    buttonClassName:
       "bg-linear-to-r from-indigo-600 to-violet-600 group-hover:from-indigo-700 group-hover:to-violet-700",
     cardClassName: "border-t-indigo-500",
     description:
@@ -95,6 +114,7 @@ const roleOptions: readonly RoleOption[] = [
 ];
 
 const roleHomes = {
+  PRINCIPAL: "/principal",
   ADMIN: "/admin",
   HOD: "/hod",
   FACULTY: "/faculty",
@@ -165,7 +185,7 @@ export function Login() {
           ))}
         </div>
 
-        <div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col">
+        <div className="relative mx-auto flex w-full max-w-6xl flex-1 flex-col">
           <div className="mx-auto max-w-2xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-white px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-indigo-600">
               <Shield aria-hidden="true" className="size-3.5" />
@@ -188,7 +208,7 @@ export function Login() {
             </span>
           </div>
 
-          <div className="mx-auto mt-6 grid w-full max-w-5xl gap-5 md:grid-cols-3">
+          <div className="mx-auto mt-6 grid w-full max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {roleOptions.map((option) => {
               const Icon = option.icon;
 

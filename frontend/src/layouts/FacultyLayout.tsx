@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Files,
   GraduationCap,
+  Inbox,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const facultyNavigation = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/faculty" },
+  { icon: Inbox, label: "Inbox", path: "/faculty/inbox" },
   { icon: Files, label: "My Notices", path: "/faculty/notices" },
   { icon: Plus, label: "Create Notice", path: "/faculty/create-notice" },
 ] as const;

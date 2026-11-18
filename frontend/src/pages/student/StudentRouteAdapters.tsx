@@ -2,30 +2,52 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { useAuth } from "@/contexts/auth-context";
-import { getNoticeById, listNotices, markNoticeAsRead } from "@/lib/noticeApi";
+import {
+  getDepartmentNoticeById,
+  listDepartmentNotices,
+  markNoticeAsRead,
+} from "@/lib/noticeApi";
 import {
   isNoticeRead,
   rememberNoticeRead,
 } from "@/lib/studentNoticeReads";
-import type { Notice, StudentNotice } from "@/types";
+import type { NoticeCategory, StudentNotice } from "@/types";
+import type { DepartmentNotice } from "@/types/notice";
 
 import { AllNotices } from "./AllNotices";
 import { NoticeDetails } from "./NoticeDetails";
 import { StudentDashboard } from "./StudentDashboard";
 
-function toStudentNotice(notice: Notice, userId: string): StudentNotice {
+function toStudentNoticeFromDept(
+  n: DepartmentNotice,
+  isRead: boolean,
+): StudentNotice {
   return {
-    ...notice,
-    authorName: notice.authorId || "Faculty",
-    imageUrl: notice.posterUrl,
+    noticeId: n.id,
+    title: n.title,
+    content: n.body,
+    authorId: "",
+    department: n.department || "All Departments",
+    category: (n.category || "GENERAL") as NoticeCategory,
+    targetYear: null,
+    targetSection: null,
+    publishAt: n.notice_date || n.created_at,
+    expiresAt: null,
+    status: "PUBLISHED",
+    template: null,
+    createdAt: n.created_at || new Date().toISOString(),
+    updatedAt: n.updated_at || new Date().toISOString(),
+    posterUrl: null,
+    authorName: "",
+    imageUrl: null,
     isAcknowledged: false,
-    isRead: isNoticeRead(userId, notice.noticeId),
+    isRead,
     requiresAcknowledgement: false,
   };
 }
 
 function useStudentNotices() {
-  const { currentUser } = useAuth();
+  const { accessToken, currentUser } = useAuth();
   const userId = currentUser?.sub || currentUser?.username || "";
   const [notices, setNotices] = useState<StudentNotice[]>([]);
 
@@ -33,17 +55,34 @@ function useStudentNotices() {
     let isCancelled = false;
 
     const loadNotices = async () => {
+      if (!accessToken) {
+        return;
+      }
+
       try {
-        const allNotices = await listNotices();
+        const deptNotices = await listDepartmentNotices(accessToken);
         if (isCancelled) {
           return;
         }
 
-        setNotices(
-          allNotices
-            .filter((notice) => notice.status === "PUBLISHED")
-            .map((notice) => toStudentNotice(notice, userId)),
+        let readIds = new Set<string>();
+        try {
+          const raw = localStorage.getItem("notice_read_ids_student");
+          if (raw) {
+            readIds = new Set(JSON.parse(raw));
+          }
+        } catch {
+          // ignore
+        }
+
+        const mapped: StudentNotice[] = deptNotices.map((n) =>
+          toStudentNoticeFromDept(
+            n,
+            readIds.has(n.id) || isNoticeRead(userId, n.id),
+          ),
         );
+
+        setNotices(mapped);
       } catch {
         if (!isCancelled) {
           setNotices([]);
@@ -56,7 +95,7 @@ function useStudentNotices() {
     return () => {
       isCancelled = true;
     };
-  }, [userId]);
+  }, [accessToken, userId]);
 
   return { notices, userId };
 }
@@ -90,6 +129,7 @@ export function AllNoticesRoute() {
 }
 
 export function NoticeDetailsRoute() {
+  const { accessToken } = useAuth();
   const { noticeId } = useParams<{ noticeId: string }>();
   const { notices: listedNotices, userId } = useStudentNotices();
   const [notice, setNotice] = useState<StudentNotice | null>(null);
@@ -106,7 +146,7 @@ export function NoticeDetailsRoute() {
     if (fromList) {
       setNotice({
         ...fromList,
-        isRead: fromList.isRead || isNoticeRead(userId, fromList.noticeId),
+        isRead: true,
       });
       return;
     }
@@ -114,10 +154,13 @@ export function NoticeDetailsRoute() {
     let isCancelled = false;
 
     const loadNotice = async () => {
+      if (!accessToken) {
+        return;
+      }
       try {
-        const loaded = await getNoticeById(noticeId);
+        const loaded = await getDepartmentNoticeById(noticeId, accessToken);
         if (!isCancelled) {
-          setNotice(toStudentNotice(loaded, userId));
+          setNotice(toStudentNoticeFromDept(loaded, true));
         }
       } catch {
         if (!isCancelled) {
@@ -131,7 +174,7 @@ export function NoticeDetailsRoute() {
     return () => {
       isCancelled = true;
     };
-  }, [listedNotices, noticeId, userId]);
+  }, [accessToken, listedNotices, noticeId, userId]);
 
   const handleMarkAsRead = useCallback(
     (selectedNoticeId: string) => {

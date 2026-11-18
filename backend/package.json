@@ -1,0 +1,18 @@
+{
+  "name": "notice-board-backend",
+  "version": "1.0.0",
+  "description": "Department Notice Board backend service with PostgreSQL and Cognito auth",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "init-db": "node src/db/initDb.js"
+  },
+  "dependencies": {
+    "aws-jwt-verify": "^4.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.3"
+  }
+}

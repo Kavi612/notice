@@ -445,7 +445,189 @@ export async function markNoticeAsRead(
     },
   );
 
-  if (!response.ok && response.status !== 409) {
+    if (!response.ok && response.status !== 409) {
     throw new Error("Couldn't mark this notice as read.");
   }
 }
+
+export interface CreateDepartmentNoticeInput {
+  title: string;
+  body: string;
+  department?: string;
+  category?: string;
+  priority?: "REGULAR" | "URGENT";
+  notice_date?: string;
+  status?: "DRAFT" | "PUBLISHED";
+  target_roles: import("@/types/notice").TargetRole[];
+}
+
+export async function createDepartmentNotice(
+  data: CreateDepartmentNoticeInput,
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice> {
+  const response = await fetch("/api/notices", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to create notice.");
+  }
+
+  const payload = await response.json();
+  return payload.notice;
+}
+
+export async function listDepartmentNotices(
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice[]> {
+  const response = await fetch("/api/notices", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to load notices.");
+  }
+
+  const payload = await response.json();
+  return payload.notices || [];
+}
+
+export async function listPrincipalNotices(
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice[]> {
+  const response = await fetch("/api/notices?scope=my", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to load notices.");
+  }
+
+  const payload = await response.json();
+  return payload.notices || [];
+}
+
+export async function listAuthoredNotices(
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice[]> {
+  return listPrincipalNotices(accessToken);
+}
+
+export async function getDepartmentNoticeById(
+  id: string,
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice> {
+  const response = await fetch(`/api/notices/${encodeURIComponent(id)}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok) {
+    throw new Error("Failed to load notice.");
+  }
+
+  const payload = await response.json();
+  return payload.notice;
+}
+
+export async function updateDepartmentNotice(
+  id: string,
+  data: Partial<CreateDepartmentNoticeInput>,
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice> {
+  const response = await fetch(`/api/notices/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to update notice.");
+  }
+
+  const payload = await response.json();
+  return payload.notice;
+}
+
+export async function publishDepartmentNotice(
+  notice: import("@/types/notice").DepartmentNotice,
+  accessToken: string,
+): Promise<import("@/types/notice").DepartmentNotice> {
+  if (!notice.target_roles || notice.target_roles.length === 0) {
+    throw new Error(
+      "Target audience cannot be empty. Please select at least one role before publishing.",
+    );
+  }
+
+  return updateDepartmentNotice(
+    notice.id,
+    {
+      title: notice.title,
+      body: notice.body,
+      department: notice.department,
+      category: notice.category,
+      priority: notice.priority,
+      notice_date: notice.notice_date,
+      target_roles: notice.target_roles,
+      status: "PUBLISHED",
+    },
+    accessToken,
+  );
+}
+
+export async function deleteDepartmentNotice(
+  id: string,
+  accessToken: string,
+): Promise<void> {
+  const response = await fetch(`/api/notices/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (response.status === 401) {
+    throw new SessionExpiredError();
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to delete notice.");
+  }
+}
+

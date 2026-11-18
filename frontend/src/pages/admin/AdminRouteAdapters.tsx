@@ -18,56 +18,13 @@ import {
 } from "@/lib/userApi";
 import type { Notice, User } from "@/types";
 
-import { AdminDashboard } from "./AdminDashboard";
+import { HodDashboard } from "../hod/HodDashboard";
 import { ArchiveView } from "./ArchiveView";
 import { NoticeManagement } from "./NoticeManagement";
 import { UserManagement } from "./UserManagement";
 
 export function AdminDashboardRoute() {
-  const { currentUser } = useAuth();
-  const [notices, setNotices] = useState<Notice[]>([]);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    const loadNotices = async () => {
-      try {
-        const allNotices = await listNotices();
-        if (!isCancelled) {
-          setNotices(allNotices);
-        }
-      } catch {
-        if (!isCancelled) {
-          setNotices([]);
-        }
-      }
-    };
-
-    void loadNotices();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  return (
-    <AdminDashboard
-      displayName={currentUser?.username ?? "HOD"}
-      draftCount={
-        notices.filter((notice) => notice.status === "DRAFT").length
-      }
-      expiredCount={
-        notices.filter((notice) => notice.status === "EXPIRED").length
-      }
-      publishedCount={
-        notices.filter((notice) => notice.status === "PUBLISHED").length
-      }
-      scheduledCount={
-        notices.filter((notice) => notice.status === "SCHEDULED").length
-      }
-      totalNoticesCount={notices.length}
-    />
-  );
+  return <HodDashboard />;
 }
 
 export function UserManagementRoute() {

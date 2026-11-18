@@ -55,6 +55,12 @@ const roleStyles: Record<
   UserRole,
   { badge: string; button: string; highlight: string }
 > = {
+  PRINCIPAL: {
+    badge: "bg-indigo-50 text-indigo-600",
+    button:
+      "bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700",
+    highlight: "text-violet-400",
+  },
   ADMIN: {
     badge: "bg-indigo-50 text-indigo-600",
     button:
@@ -82,6 +88,7 @@ const roleStyles: Record<
 };
 
 const roleDestinations: Record<UserRole, string> = {
+  PRINCIPAL: "/principal",
   ADMIN: "/admin",
   HOD: "/hod",
   FACULTY: "/faculty",
@@ -91,6 +98,10 @@ const roleDestinations: Record<UserRole, string> = {
 const demoAccounts: Partial<
   Record<UserRole, { identifier: string; password: string }>
 > = {
+  PRINCIPAL: {
+    identifier: "testprincipal",
+    password: "test1P@123",
+  },
   HOD: {
     identifier: "testhod1@gmail.com",
     password: "test1H@123",
