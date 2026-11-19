@@ -26,7 +26,7 @@ function toStudentNoticeFromDept(
     noticeId: n.id,
     title: n.title,
     content: n.body,
-    authorId: "",
+    authorId: n.author_id,
     department: n.department || "All Departments",
     category: (n.category || "GENERAL") as NoticeCategory,
     targetYear: null,
@@ -38,7 +38,13 @@ function toStudentNoticeFromDept(
     createdAt: n.created_at || new Date().toISOString(),
     updatedAt: n.updated_at || new Date().toISOString(),
     posterUrl: null,
-    authorName: "",
+    authorName:
+      n.author_name ||
+      (n.author_role === "HOD"
+        ? "Head of Department"
+        : n.author_role === "FACULTY"
+          ? "Faculty In-charge"
+          : "Office of the Principal"),
     imageUrl: null,
     isAcknowledged: false,
     isRead,

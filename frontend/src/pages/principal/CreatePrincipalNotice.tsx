@@ -220,6 +220,7 @@ export function CreatePrincipalNotice({
           status,
           target_roles: formState.targetRoles,
           author_role: role,
+          author_name: formState.contactName.trim() || defaultContactName,
         },
         accessToken,
       );

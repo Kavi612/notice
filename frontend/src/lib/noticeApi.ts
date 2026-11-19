@@ -627,8 +627,41 @@ export function normalizeDepartmentNotice(
   const id = String(record.id || record.noticeId || "");
   const body = String(record.body || record.content || "");
   const authorId = String(record.author_id || record.authorId || "");
-  const authorName = String(record.author_name || record.authorName || "User");
-  const authorRole = String(record.author_role || record.authorRole || "PRINCIPAL");
+
+  // Resolve author role accurately
+  let authorRole = "";
+  if (typeof record.author_role === "string" && record.author_role.trim().length > 0) {
+    authorRole = record.author_role.trim().toUpperCase();
+  } else if (typeof record.authorRole === "string" && record.authorRole.trim().length > 0) {
+    authorRole = record.authorRole.trim().toUpperCase();
+  } else if (typeof record.targetYear === "string" && record.targetYear.startsWith("ROLE:")) {
+    authorRole = record.targetYear.replace(/^ROLE:/i, "").trim().toUpperCase();
+  } else if (typeof record.template === "string" && record.template.startsWith("ROLE:")) {
+    authorRole = (record.template.split("|")[0] ?? "").replace(/^ROLE:/i, "").trim().toUpperCase();
+  }
+
+  // If still not explicitly found, infer from content and contact information
+  if (!authorRole || authorRole === "USER") {
+    const textToScan = (body + " " + (record.author_name || "") + " " + (record.authorName || "")).toLowerCase();
+    if (textToScan.includes("head of department") || textToScan.includes("hod.cse") || textToScan.includes("hod")) {
+      authorRole = "HOD";
+    } else if (textToScan.includes("faculty in-charge") || textToScan.includes("faculty@") || textToScan.includes("faculty")) {
+      authorRole = "FACULTY";
+    } else {
+      authorRole = "PRINCIPAL";
+    }
+  }
+
+  let authorName = String(record.author_name || record.authorName || "").trim();
+  if (!authorName || authorName === "User") {
+    if (authorRole === "HOD") {
+      authorName = "Head of Department";
+    } else if (authorRole === "FACULTY") {
+      authorName = "Faculty In-charge";
+    } else {
+      authorName = "Office of the Principal";
+    }
+  }
 
   // Extract target roles from target_roles, targetRoles, or fallback targetSection
   let targetRoles: import("@/types/notice").TargetRole[] = [];
@@ -687,8 +720,15 @@ export async function createDepartmentNotice(
   const identity = extractCallerIdentity(accessToken);
 
   const authorId = identity.userId || "usr_author";
-  const authorName = data.author_name || identity.name || identity.username || "User";
   const authorRole = data.author_role || identity.role || "PRINCIPAL";
+  const authorName =
+    data.author_name ||
+    identity.name ||
+    (authorRole === "HOD"
+      ? "Head of Department"
+      : authorRole === "FACULTY"
+        ? "Faculty In-charge"
+        : "Office of the Principal");
   const authorUsername = identity.username || "";
   const rolesString = Array.isArray(data.target_roles) && data.target_roles.length > 0
     ? data.target_roles.join(",")
@@ -710,7 +750,8 @@ export async function createDepartmentNotice(
     targetRoles: data.target_roles,
     target_roles: data.target_roles,
     targetSection: rolesString,
-    targetYear: "All",
+    targetYear: "ROLE:" + authorRole,
+    template: "ROLE:" + authorRole,
     status: data.status || "PUBLISHED",
   };
 
@@ -933,6 +974,14 @@ export async function updateDepartmentNotice(
         }
       : {}),
     ...(data.status !== undefined ? { status: data.status } : {}),
+    ...(data.author_role
+      ? {
+          authorRole: data.author_role,
+          author_role: data.author_role,
+          targetYear: "ROLE:" + data.author_role,
+          template: "ROLE:" + data.author_role,
+        }
+      : {}),
     ...(userId ? { authorId: userId, author_id: userId, authorName: name, author_name: name } : {}),
   };
 

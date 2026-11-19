@@ -254,7 +254,7 @@ export function RoleInbox({ role, title, description }: RoleInboxProps) {
                       {role !== "STUDENT" && (
                         <td className="px-5 py-4 whitespace-nowrap">
                           <span className="rounded-md border border-violet-200 bg-violet-50 px-2 py-0.5 text-[0.65rem] font-semibold text-violet-700">
-                            {notice.author_role || "PRINCIPAL"}
+                            {notice.author_role || (notice.author_name?.includes("HOD") || notice.body?.includes("Head of Department") ? "HOD" : "PRINCIPAL")}
                           </span>
                         </td>
                       )}
@@ -335,16 +335,10 @@ export function RoleInbox({ role, title, description }: RoleInboxProps) {
                 <h2 className="mt-2 text-xl font-bold text-slate-950">
                   {selectedNotice.title}
                 </h2>
-                {role !== "STUDENT" ? (
-                  <p className="mt-1 text-xs text-slate-500">
-                    From: {selectedNotice.author_name || "Office of the Principal"}{" "}
-                    ({selectedNotice.author_role || "PRINCIPAL"}) · {selectedNotice.department}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-xs text-slate-500">
-                    {selectedNotice.department}
-                  </p>
-                )}
+                <p className="mt-1 text-xs text-slate-500">
+                  From: {selectedNotice.author_name || (selectedNotice.author_role === "HOD" ? "Head of Department" : selectedNotice.author_role === "FACULTY" ? "Faculty In-charge" : "Office of the Principal")}{" "}
+                  ({selectedNotice.author_role || (selectedNotice.author_name?.includes("HOD") || selectedNotice.body?.includes("Head of Department") ? "HOD" : "PRINCIPAL")}) · {selectedNotice.department}
+                </p>
               </div>
 
               <button
