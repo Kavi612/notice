@@ -56,9 +56,9 @@ export async function publishNoticeById(
       headers,
       body: hasSchedule
         ? JSON.stringify({
-            expiresAt: options?.expiresAt ?? undefined,
-            publishAt: options?.publishAt ?? undefined,
-          })
+          expiresAt: options?.expiresAt ?? undefined,
+          publishAt: options?.publishAt ?? undefined,
+        })
         : undefined,
     },
   );
@@ -504,6 +504,179 @@ export interface CreateDepartmentNoticeInput {
   notice_date?: string;
   status?: "DRAFT" | "PUBLISHED";
   target_roles: import("@/types/notice").TargetRole[];
+  author_role?: string;
+  author_name?: string;
+}
+
+export interface CallerIdentity {
+  userId: string;
+  username: string;
+  name: string;
+  role: string;
+  identifiers: Set<string>;
+}
+
+export function extractCallerIdentity(accessToken: string): CallerIdentity {
+  const identifiers = new Set<string>();
+  let userId = "";
+  let username = "";
+  let name = "";
+  let role = "";
+
+  // 1. Try reading storedAuth from sessionStorage (contains exact user profile and idToken)
+  try {
+    const rawStored = typeof sessionStorage !== "undefined"
+      ? sessionStorage.getItem("notice-portal-auth")
+      : null;
+    if (rawStored) {
+      const parsed = JSON.parse(rawStored);
+      if (parsed.currentUser) {
+        if (parsed.currentUser.sub) {
+          userId = String(parsed.currentUser.sub).trim();
+          identifiers.add(userId.toLowerCase());
+        }
+        if (parsed.currentUser.username) {
+          username = String(parsed.currentUser.username).trim();
+          identifiers.add(username.toLowerCase());
+        }
+        if (parsed.currentUser.role) {
+          role = String(parsed.currentUser.role).toUpperCase();
+        }
+      }
+      if (parsed.idToken && typeof parsed.idToken === "string") {
+        const idParts = parsed.idToken.split(".");
+        if (idParts.length === 3 && typeof idParts[1] === "string") {
+          const padded = idParts[1].replace(/-/g, "+").replace(/_/g, "/");
+          const padLength = (4 - (padded.length % 4)) % 4;
+          const b64 = padded + "=".repeat(padLength);
+          const idClaims = JSON.parse(atob(b64));
+          if (idClaims.sub) identifiers.add(String(idClaims.sub).toLowerCase());
+          if (idClaims["cognito:username"]) identifiers.add(String(idClaims["cognito:username"]).toLowerCase());
+          if (idClaims.username) identifiers.add(String(idClaims.username).toLowerCase());
+          if (idClaims.email) identifiers.add(String(idClaims.email).toLowerCase());
+          if (idClaims.name && !name) name = String(idClaims.name);
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  // 2. Parse passed token (accessToken or idToken)
+  try {
+    const raw = accessToken.replace(/^Bearer\s+/i, "").trim();
+    const parts = raw.split(".");
+    if (parts.length === 3 && typeof parts[1] === "string") {
+      const padded = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+      const padLength = (4 - (padded.length % 4)) % 4;
+      const b64 = padded + "=".repeat(padLength);
+      const claims = JSON.parse(atob(b64));
+
+      if (claims.sub) {
+        if (!userId) userId = String(claims.sub).trim();
+        identifiers.add(String(claims.sub).toLowerCase());
+      }
+      if (claims["cognito:username"]) {
+        if (!username) username = String(claims["cognito:username"]).trim();
+        identifiers.add(String(claims["cognito:username"]).toLowerCase());
+      }
+      if (claims.username) {
+        if (!username) username = String(claims.username).trim();
+        identifiers.add(String(claims.username).toLowerCase());
+      }
+      if (claims.email) {
+        identifiers.add(String(claims.email).toLowerCase());
+      }
+      if (claims.name && !name) {
+        name = String(claims.name);
+      }
+      if (!role) {
+        const rawGroups = claims["cognito:groups"] ?? [];
+        if (Array.isArray(rawGroups) && rawGroups.length > 0) {
+          role = String(rawGroups[0]).toUpperCase();
+        } else if (claims["custom:role"]) {
+          role = String(claims["custom:role"]).toUpperCase();
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  if (!name) {
+    name = username || "User";
+  }
+
+  return {
+    userId: userId || username,
+    username,
+    name,
+    role,
+    identifiers,
+  };
+}
+
+export function normalizeDepartmentNotice(
+  raw: unknown,
+): import("@/types/notice").DepartmentNotice {
+  if (!raw || typeof raw !== "object") {
+    return raw as import("@/types/notice").DepartmentNotice;
+  }
+  const item = (raw as Record<string, unknown>).notice ?? (raw as Record<string, unknown>).item ?? raw;
+  const record = item as Record<string, unknown>;
+  const id = String(record.id || record.noticeId || "");
+  const body = String(record.body || record.content || "");
+  const authorId = String(record.author_id || record.authorId || "");
+  const authorName = String(record.author_name || record.authorName || "User");
+  const authorRole = String(record.author_role || record.authorRole || "PRINCIPAL");
+
+  // Extract target roles from target_roles, targetRoles, or fallback targetSection
+  let targetRoles: import("@/types/notice").TargetRole[] = [];
+  if (Array.isArray(record.target_roles) && record.target_roles.length > 0) {
+    targetRoles = record.target_roles as import("@/types/notice").TargetRole[];
+  } else if (Array.isArray(record.targetRoles) && record.targetRoles.length > 0) {
+    targetRoles = record.targetRoles as import("@/types/notice").TargetRole[];
+  } else if (typeof record.targetSection === "string" && record.targetSection.length > 0) {
+    if (record.targetSection === "All" || record.targetSection === "ALL") {
+      targetRoles = ["HOD", "FACULTY", "STUDENT"];
+    } else {
+      targetRoles = record.targetSection
+        .split(",")
+        .map((s) => s.trim().toUpperCase())
+        .filter((s) => ["HOD", "FACULTY", "STUDENT"].includes(s)) as import("@/types/notice").TargetRole[];
+      if (targetRoles.length === 0) {
+        targetRoles = ["HOD", "FACULTY", "STUDENT"];
+      }
+    }
+  } else {
+    targetRoles = ["HOD", "FACULTY", "STUDENT"];
+  }
+
+  const status = (record.status === "DRAFT" ? "DRAFT" : "PUBLISHED") as "DRAFT" | "PUBLISHED";
+  const priority = (record.priority === "URGENT" ? "URGENT" : "REGULAR") as "REGULAR" | "URGENT";
+  const category = String(record.category || "GENERAL");
+  const now = new Date().toISOString();
+  const noticeDate = String(record.notice_date || record.noticeDate || record.createdAt || now);
+  const createdAt = String(record.created_at || record.createdAt || now);
+  const updatedAt = String(record.updated_at || record.updatedAt || createdAt);
+  const department = String(record.department || "All Departments");
+
+  return {
+    id,
+    title: String(record.title || ""),
+    body,
+    department,
+    author_id: authorId,
+    author_name: authorName,
+    author_role: authorRole,
+    target_roles: targetRoles,
+    status,
+    priority,
+    category,
+    notice_date: noticeDate,
+    created_at: createdAt,
+    updated_at: updatedAt,
+  };
 }
 
 export async function createDepartmentNotice(
@@ -511,25 +684,95 @@ export async function createDepartmentNotice(
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
   const url = `${API_BASE_URL}/notices`;
+  const identity = extractCallerIdentity(accessToken);
+
+  const authorId = identity.userId || "usr_author";
+  const authorName = data.author_name || identity.name || identity.username || "User";
+  const authorRole = data.author_role || identity.role || "PRINCIPAL";
+  const authorUsername = identity.username || "";
+  const rolesString = Array.isArray(data.target_roles) && data.target_roles.length > 0
+    ? data.target_roles.join(",")
+    : "All";
+
+  const payload = {
+    ...data,
+    // Dual-send for full compatibility with both legacy and new backend
+    content: data.body,
+    body: data.body,
+    authorId: authorId,
+    author_id: authorId,
+    authorName: authorName,
+    author_name: authorName,
+    authorRole: authorRole,
+    author_role: authorRole,
+    authorUsername: authorUsername,
+    author_username: authorUsername,
+    targetRoles: data.target_roles,
+    target_roles: data.target_roles,
+    targetSection: rolesString,
+    targetYear: "All",
+    status: data.status || "PUBLISHED",
+  };
+
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 
   if (response.status === 401) {
     throw new SessionExpiredError();
   }
 
-  const payload = await parseResponseOrThrow<{ notice: import("@/types/notice").DepartmentNotice }>(
+  const responseData = await parseResponseOrThrow<unknown>(
     response,
     url,
     "Failed to create notice.",
   );
-  return payload.notice || (payload as unknown as import("@/types/notice").DepartmentNotice);
+  let created = normalizeDepartmentNotice(responseData);
+
+  // If user requested PUBLISHED but backend defaulted/forced DRAFT (legacy backend behavior),
+  // immediately update the status to PUBLISHED.
+  if (data.status === "PUBLISHED" && created.status === "DRAFT") {
+    try {
+      created = await updateDepartmentNotice(
+        created.id,
+        {
+          ...data,
+          target_roles: data.target_roles,
+          status: "PUBLISHED",
+        },
+        accessToken,
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  return created;
+}
+
+function extractCallerAudiencesFromToken(accessToken: string): { isPrincipal: boolean; audiences: string[] } {
+  const identity = extractCallerIdentity(accessToken);
+  const role = identity.role;
+
+  if (role === "PRINCIPAL") {
+    return { isPrincipal: true, audiences: [] };
+  }
+
+  const audiences: string[] = [];
+  if (role === "ADMIN" || role === "HOD") {
+    audiences.push("HOD");
+  } else if (role === "FACULTY") {
+    audiences.push("FACULTY");
+  } else {
+    audiences.push("STUDENT");
+  }
+
+  return { isPrincipal: false, audiences };
 }
 
 export async function listDepartmentNotices(
@@ -546,12 +789,41 @@ export async function listDepartmentNotices(
     throw new SessionExpiredError();
   }
 
-  const payload = await parseResponseOrThrow<{ notices: import("@/types/notice").DepartmentNotice[] }>(
+  const payload = await parseResponseOrThrow<unknown>(
     response,
     url,
     "Failed to load notices.",
   );
-  return payload.notices || [];
+  const items = Array.isArray(payload)
+    ? payload
+    : Array.isArray((payload as any)?.notices)
+      ? (payload as any).notices
+      : Array.isArray((payload as any)?.items)
+        ? (payload as any).items
+        : Array.isArray((payload as any)?.Items)
+          ? (payload as any).Items
+          : [];
+
+  const allNotices: import("@/types/notice").DepartmentNotice[] =
+    items.map(normalizeDepartmentNotice);
+
+  // Client-side audience filtering safeguard (in addition to backend filtering)
+  const { isPrincipal, audiences } = extractCallerAudiencesFromToken(accessToken);
+  if (isPrincipal) {
+    return allNotices;
+  }
+
+  return allNotices.filter((notice: import("@/types/notice").DepartmentNotice) => {
+    // Only PUBLISHED notices appear in role inboxes (drafts are only in author's view)
+    if (notice.status === "DRAFT") {
+      return false;
+    }
+    // Check if notice targets the caller's audience role
+    const roles: string[] = Array.isArray(notice.target_roles)
+      ? notice.target_roles.map((r: string) => String(r).toUpperCase())
+      : [];
+    return roles.some((r: string) => audiences.includes(r));
+  });
 }
 
 export async function listPrincipalNotices(
@@ -568,12 +840,44 @@ export async function listPrincipalNotices(
     throw new SessionExpiredError();
   }
 
-  const payload = await parseResponseOrThrow<{ notices: import("@/types/notice").DepartmentNotice[] }>(
+  const payload = await parseResponseOrThrow<unknown>(
     response,
     url,
     "Failed to load notices.",
   );
-  return payload.notices || [];
+  const items = Array.isArray(payload)
+    ? payload
+    : Array.isArray((payload as any)?.notices)
+      ? (payload as any).notices
+      : Array.isArray((payload as any)?.items)
+        ? (payload as any).items
+        : Array.isArray((payload as any)?.Items)
+          ? (payload as any).Items
+          : [];
+  const allNotices: import("@/types/notice").DepartmentNotice[] =
+    items.map(normalizeDepartmentNotice);
+
+  // Filter so each role/user sees ONLY the notices sent/authored by them
+  const identity = extractCallerIdentity(accessToken);
+  if (identity.identifiers.size === 0) {
+    return [];
+  }
+
+  return allNotices.filter((notice) => {
+    const authorId = (notice.author_id || "").toLowerCase();
+    const noticeAuthorName = (notice.author_name || "").toLowerCase();
+    const authorUsername = (
+      (notice as any).author_username ||
+      (notice as any).authorUsername ||
+      ""
+    ).toLowerCase();
+
+    return (
+      (authorId && identity.identifiers.has(authorId)) ||
+      (authorUsername && identity.identifiers.has(authorUsername)) ||
+      (noticeAuthorName && identity.identifiers.has(noticeAuthorName))
+    );
+  });
 }
 
 export async function listAuthoredNotices(
@@ -597,12 +901,12 @@ export async function getDepartmentNoticeById(
     throw new SessionExpiredError();
   }
 
-  const payload = await parseResponseOrThrow<{ notice: import("@/types/notice").DepartmentNotice }>(
+  const payload = await parseResponseOrThrow<unknown>(
     response,
     url,
     "Failed to load notice.",
   );
-  return payload.notice || (payload as unknown as import("@/types/notice").DepartmentNotice);
+  return normalizeDepartmentNotice(payload);
 }
 
 export async function updateDepartmentNotice(
@@ -611,38 +915,58 @@ export async function updateDepartmentNotice(
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
   const url = `${API_BASE_URL}/notices/${encodeURIComponent(id)}`;
+  const identity = extractCallerIdentity(accessToken);
+  const userId = identity.userId;
+  const name = identity.name;
+  const rolesString = Array.isArray(data.target_roles) && data.target_roles.length > 0
+    ? data.target_roles.join(",")
+    : undefined;
+
+  const payload = {
+    ...data,
+    ...(data.body !== undefined ? { content: data.body, body: data.body } : {}),
+    ...(data.target_roles !== undefined
+      ? {
+          targetRoles: data.target_roles,
+          target_roles: data.target_roles,
+          targetSection: rolesString,
+        }
+      : {}),
+    ...(data.status !== undefined ? { status: data.status } : {}),
+    ...(userId ? { authorId: userId, author_id: userId, authorName: name, author_name: name } : {}),
+  };
+
   const response = await fetch(url, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 
   if (response.status === 401) {
     throw new SessionExpiredError();
   }
 
-  const payload = await parseResponseOrThrow<{ notice: import("@/types/notice").DepartmentNotice }>(
+  const responseData = await parseResponseOrThrow<unknown>(
     response,
     url,
     "Failed to update notice.",
   );
-  return payload.notice || (payload as unknown as import("@/types/notice").DepartmentNotice);
+  return normalizeDepartmentNotice(responseData);
 }
 
 export async function publishDepartmentNotice(
   notice: import("@/types/notice").DepartmentNotice,
   accessToken: string,
 ): Promise<import("@/types/notice").DepartmentNotice> {
-  if (!notice.target_roles || notice.target_roles.length === 0) {
-    throw new Error(
-      "Target audience cannot be empty. Please select at least one role before publishing.",
-    );
-  }
+  const targetRoles =
+    notice.target_roles && notice.target_roles.length > 0
+      ? notice.target_roles
+      : (["HOD", "FACULTY", "STUDENT"] as import("@/types/notice").TargetRole[]);
 
-  return updateDepartmentNotice(
+  const updated = await updateDepartmentNotice(
     notice.id,
     {
       title: notice.title,
@@ -651,11 +975,20 @@ export async function publishDepartmentNotice(
       category: notice.category,
       priority: notice.priority,
       notice_date: notice.notice_date,
-      target_roles: notice.target_roles,
+      target_roles: targetRoles,
       status: "PUBLISHED",
     },
     accessToken,
   );
+
+  return {
+    ...updated,
+    target_roles:
+      updated.target_roles && updated.target_roles.length > 0
+        ? updated.target_roles
+        : targetRoles,
+    status: "PUBLISHED",
+  };
 }
 
 export async function deleteDepartmentNotice(

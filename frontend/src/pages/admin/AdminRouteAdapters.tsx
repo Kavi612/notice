@@ -205,19 +205,18 @@ export function NoticeManagementRoute() {
       return;
     }
 
-    if (!notice.target_roles || notice.target_roles.length === 0) {
-      setPublishError(
-        "Target audience cannot be empty. Please select at least one role before publishing.",
-      );
-      return;
-    }
+    const rolesToPublish =
+      notice.target_roles && notice.target_roles.length > 0
+        ? notice.target_roles
+        : (["FACULTY", "STUDENT"] as import("@/types/notice").TargetRole[]);
 
     setPublishError(null);
     setPublishSuccess(null);
     setPublishingNoticeId(notice.id);
 
     try {
-      const updated = await publishDepartmentNotice(notice, accessToken);
+      const noticeWithRoles = { ...notice, target_roles: rolesToPublish };
+      const updated = await publishDepartmentNotice(noticeWithRoles, accessToken);
       setPublishSuccess("Notice published successfully.");
       setNotices((current) =>
         current.map((n) => (n.id === updated.id ? updated : n)),

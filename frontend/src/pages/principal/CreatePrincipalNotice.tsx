@@ -87,7 +87,7 @@ const templateOptions: { label: string; value: NoticeTemplate }[] = [
 ];
 
 export function CreatePrincipalNotice({
-  role: _role = "PRINCIPAL",
+  role = "PRINCIPAL",
   allowedTargetRoles = ["HOD", "FACULTY", "STUDENT"],
   demoSamples = DEMO_SAMPLES,
   defaultDepartment = "All Departments",
@@ -219,6 +219,7 @@ export function CreatePrincipalNotice({
           notice_date: formState.noticeDate,
           status,
           target_roles: formState.targetRoles,
+          author_role: role,
         },
         accessToken,
       );

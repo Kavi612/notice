@@ -53,23 +53,22 @@ export function PrincipalNotices() {
   const handlePublish = async (notice: DepartmentNotice) => {
     setPublishError(null);
 
-    if (!notice.target_roles || notice.target_roles.length === 0) {
-      setPublishError(
-        "Target audience cannot be empty. Please select at least one role before publishing.",
-      );
-      return;
-    }
-
     if (!accessToken) {
       setPublishError(SESSION_EXPIRED_ERROR);
       navigate("/login");
       return;
     }
 
+    const rolesToPublish =
+      notice.target_roles && notice.target_roles.length > 0
+        ? notice.target_roles
+        : (["HOD", "FACULTY", "STUDENT"] as TargetRole[]);
+
     setPublishingId(notice.id);
 
     try {
-      const updated = await publishDepartmentNotice(notice, accessToken);
+      const noticeWithRoles = { ...notice, target_roles: rolesToPublish };
+      const updated = await publishDepartmentNotice(noticeWithRoles, accessToken);
       setNotices((prev) =>
         prev.map((n) => (n.id === updated.id ? updated : n)),
       );
